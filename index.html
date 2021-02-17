@@ -360,16 +360,19 @@
 		openExcel.addEventListener('click', () => {
 			shell.showItemInFolder(path.resolve(__dirname, `logs.xlsx` ));
 		})
-		function StopMonitor() {
-			clearInterval(timeer);
+		function StopMonitor(flag) {
+			timeer && clearInterval(timeer);
 			loading.style.opacity = 0
 			timeer = null;
 			total = 0;
 			fail = 0;
-			scheduleHandle && scheduleHandle.cancel();
-			scheduleHandle = null;
 			logExcel();
 			toastHTML('已停止任务');
+			if (flag !== true) {
+				
+				scheduleHandle && scheduleHandle.cancel();
+				scheduleHandle = null;
+			}
 		
 		}
 		function StartMonitor() {
@@ -430,6 +433,7 @@
 						const current = date.getHours() * 100 + date.getMinutes();
 						const end = Number(endtime.value.replace(':', ''));
 						if (current >= end) {
+							// StopMonitor(true);
 							StopMonitor();
 							toastHTML('任务已结束');
 						}
@@ -628,7 +632,7 @@
 
 			const logdate = `${year}-${mouth}-${day}`;
 			const logtime = `${starttime.value}-${endtime.value}`
-			const lognum = `${(sum / rate).toFixed(4)}`
+			const lognum = `${(sum / Number(rate_num.value)).toFixed(4)}`
 			let sheets = xlsx.parse(path.join(__dirname, 'logs.xlsx'));
 			sheets[0].data.push([logdate, logtime, lognum]);
 			const buffer = xlsx.build(sheets);
