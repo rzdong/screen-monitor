@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>screen-monitor</title>
+	<!-- https://electronjs.org/docs/tutorial/security#csp-meta-tag -->
+	<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+	<style>
+		body {
+			overflow: hidden;
+		}
+		.con {
+			width: 120px;
+		}
+
+		.label {
+			line-height: 40px;
+			display: inline-block;
+			width: 120px;
+			text-align: right;
+		}
+
+		.num-input {
+			-webkit-appearance: none;
+			background-color: #fff;
+			background-image: none;
+			border-radius: 4px;
+			border: 1px solid #dcdfe6;
+			box-sizing: border-box;
+			color: #606266;
+			display: inline-block;
+			font-size: 16px;
+			height: 40px;
+			line-height: 40px;
+			outline: none;
+			padding: 0 15px;
+			transition: border-color .2s cubic-bezier(.645, .045, .355, 1);
+			width: 120px;
+		}
+
+		.width80 {
+			width: 74px;
+		}
+
+		.button {
+			display: inline-block;
+			line-height: 1;
+			white-space: nowrap;
+			cursor: pointer;
+			background: #fff;
+			border: 1px solid #dcdfe6;
+			color: #606266;
+			-webkit-appearance: none;
+			text-align: center;
+			box-sizing: border-box;
+			outline: none;
+			margin: 0;
+			transition: .1s;
+			font-weight: 500;
+			-moz-user-select: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+			padding: 12px 12px;
+			font-size: 14px;
+			border-radius: 4px;
+			width: 55px;
+		}
+
+		.el-button--primary {
+			color: #fff;
+			background-color: #409eff;
+			border-color: #409eff;
+		}
+
+		.el-button--primary:hover {
+			background: #66b1ff;
+			border-color: #66b1ff;
+			color: #fff;
+		}
+
+		.el-button--primary:active {
+			background: #3a8ee6;
+			border-color: #3a8ee6;
+			color: #fff;
+		}
+
+		.el-button--default:active {
+			color: #3a8ee6;
+			border-color: #3a8ee6;
+			outline: none;
+		}
+
+		.el-button--default:hover {
+			color: #409eff;
+			border-color: #c6e2ff;
+			background-color: #ecf5ff;
+		}
+
+		.el-card {
+			border-radius: 4px;
+			border: 1px solid #ebeef5;
+			background-color: #fff;
+			overflow: hidden;
+			color: #303133;
+			box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
+			height: 300px;
+			width: 500px;
+			display: -webkit-box;
+			position: relative;
+		}
+
+		.el-card img {
+			width: 200px;
+			/* max-height: 200px; */
+			overflow: auto;
+			display: inline-block;
+		}
+
+		.el-card .result {
+			width: 300px;
+			height: 200px;
+			overflow: auto;
+			padding-left: 15px;
+		}
+
+		.el-card .calculator {
+			width: 500px;
+			height: 100px;
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			border-top: 1px solid #eaeaea;
+		}
+
+		@keyframes loader-03 {
+			0% {
+				-webkit-transform: rotate(0deg);
+				transform: rotate(0deg);
+			}
+
+			100% {
+				-webkit-transform: rotate(360deg);
+				transform: rotate(360deg);
+			}
+		}
+
+		.loading-warp {
+			opacity: 0;
+			transition: all 0.3s;
+		}
+
+		.loading {
+			display: inline-block;
+			width: 1em;
+			height: 1em;
+			color: inherit;
+			vertical-align: middle;
+			pointer-events: none;
+			border: .2em solid currentcolor;
+			border-bottom-color: transparent;
+			border-radius: 50%;
+			-webkit-animation: 1s loader-03 linear infinite;
+			animation: 1s loader-03 linear infinite;
+			position: relative;
+		}
+
+		.info_result {
+			color: #333;
+			line-height: 28px;
+			margin: 0;
+		}
+
+		.toast-warp {
+			position: fixed;
+			height: 60px;
+			width: 100%;
+			left: 0;
+			top: 50%;
+			margin-top: -30px;
+			display: -webkit-box;
+			-webkit-box-pack: center;
+			display: none;
+		}
+
+		.toast {
+			background: rgba(0, 0, 0, .5);
+			color: #fff;
+			text-align: center;
+			display: -webkit-box;
+			-webkit-box-pack: center;
+			-webkit-box-align: center;
+			width: 230px;
+			padding: 8px;
+			border-radius: 8px;
+			
+		}
+		.warpper {
+			width: 525px;
+			margin: 0 auto;
+		}
+	</style>
+</head>
+
+
+<body>
+	<div class="warpper">
+	<span class="label">开始时间：</span>
+	<input type="time" class="num-input starttime" value=""/>
+	<span class="label">结束时间：</span>
+	<input type="time" class="num-input endtime" value=""/><br />
+	<div class="">
+
+		<span class="label position" title="左上角坐标，截屏区域宽度">截屏位置：</span>
+		<input type="number" class="num-input width80" value="200" />
+		<input type="number" class="num-input width80" value="200" />
+		<input type="number" class="num-input width80" value="282" />
+		<input type="number" class="num-input width80" value="144" />
+		<button class="button el-button--primary test">测试</button>
+	</div>
+	<span class="label">循环周期(秒)：</span>
+	<input type="number" class="num-input cycle-num" value="120" />
+	<span class="label" title="不填或乱填默认为1">结果系数：</span>
+	<input type="number" class="num-input rate-num" value="60" /><br />
+	
+	<span class="label" title="不填或乱填默认为1">识别类型：</span>
+	<select type="number" class="num-input deal-type" value="60">
+		<option value="1">百度高精度识别</option>
+		<option value="2">百度普通识别</option>
+	</select>
+	<span class="label">打开日志文件：</span>
+	<button class="button el-button--primary open">打开</button><br />
+	<span class="label">操作：</span>
+	<div style="display: inline-flex;justify-content: space-between;width: 180px;">
+		<button class="button el-button--primary start">开始</button>
+		<button class="button el-button--default stop">停止</button>
+		<button class="button el-button--default pause">暂停</button>
+	</div>
+	<span class="label">打开excel文件：</span>
+	<button class="button el-button--primary open-excel">打开</button><br />
+	<br />
+	<br />
+
+	<div class="loading-warp">
+		<div class="loading"></div> 数据分析中...
+	</div>
+	<div class="count-info"></div>
+	<br />
+	<div class="el-card">
+		<img src="" alt="" class="img_result" />
+		<div class="result">
+
+		</div>
+		<div class="calculator">
+		</div>
+	</div>
+	<br />
+	<div class="toast-warp">
+		<div class="toast"></div>
+	</div>
+	
+		
+</div>
+	<script>
+		const { desktopCapturer, screen, ipcRenderer, remote } = require('electron');
+		const fs = require('fs');
+		const path = require('path');
+		const xlsx = require('node-xlsx');
+		const { shell } = remote;
+		const schedule = require('node-schedule');
+		const screenshot = document.getElementsByClassName('start')[0];
+		const test = document.getElementsByClassName('test')[0];
+		const defaults = document.getElementsByClassName('stop')[0];
+		const pause = document.getElementsByClassName('pause')[0];
+		const loading = document.getElementsByClassName('loading-warp')[0];
+		const img_result = document.getElementsByClassName('img_result')[0];
+		const info_result = document.getElementsByClassName('result')[0];
+		const el_card = document.getElementsByClassName('el-card')[0];
+		const positions = document.getElementsByClassName('width80');
+		const cycle_num = document.getElementsByClassName('cycle-num')[0];
+		const rate_num = document.getElementsByClassName('rate-num')[0];
+		const calculator = document.getElementsByClassName('calculator')[0];
+		const count_info = document.getElementsByClassName('count-info')[0];
+		const starttime = document.getElementsByClassName('starttime')[0];
+		const endtime = document.getElementsByClassName('endtime')[0];
+		const open = document.getElementsByClassName('open')[0];
+		const openExcel = document.getElementsByClassName('open-excel')[0];
+		const dealType = document.getElementsByClassName('deal-type')[0];
+
+		initData();
+
+		var scheduleHandle = null;
+		var status = '0'; // 0空闲, 1进行中
+		var timeer = null;
+		var total = 0;
+		var fail = 0;
+		var sum = 0;
+		var currentMouthName = '';
+		var currentLogName = '';
+		test.addEventListener('click', () => {
+			const result = testFun();
+			if (!result) {
+				return;
+			}
+			ipcRenderer.invoke('test', {
+				position: [
+					Number(positions[0].value),
+					Number(positions[1].value),
+					Number(positions[2].value),
+					Number(positions[3].value),
+				],
+				dealType: dealType.value
+			}).then((result) => {
+				console.log(result);
+				img_result.src = 'data:image/png;base64,' + result;
+				// info_result.innerHTML = resultHtml(result.result.words_result);
+			}).catch((err) => {
+				alert(JSON.stringify(err));
+			})
+		})
+
+		screenshot.addEventListener('click', () => {
+			const result = testFun();
+			if (!result) {
+				return;
+			}
+			if (starttime.value === '') {
+				toastHTML(`立刻开始任务`);
+				StartMonitor();
+			} else {
+				const start = starttime.value.split(':');
+				const scheduleJobTime = `0 ${start[1]} ${start[0]} * * *`
+				toastHTML(`已开启定时任务，开始时间：${starttime.value}`);
+				
+				window.localStorage.setItem('starttime', `${starttime.value}-${endtime.value}`)
+				scheduleHandle = schedule.scheduleJob(scheduleJobTime, () => {
+					StartMonitor();
+				})
+			}
+
+		});
+		defaults.addEventListener('click', StopMonitor);
+		open.addEventListener('click', () => {
+			shell.showItemInFolder(path.resolve(__dirname, `log/${currentMouthName}/${currentLogName}` ));
+		});
+		pause.addEventListener('click', () => {
+			// pause
+			if (pause.innerHTML === '暂停') {
+				pause.innerHTML = '继续';
+				PauseInterval();
+				loading.style.opacity = 0;
+				toastHTML('已暂停，再次点击可继续监控')
+			} else {
+				pause.innerHTML = '暂停';
+				StartInterval();
+				loading.style.opacity = 1;
+				toastHTML('已恢复监控')
+			}
+		})
+		openExcel.addEventListener('click', () => {
+			shell.showItemInFolder(path.resolve(__dirname, `logs.xlsx` ));
+		})
+		function StopMonitor() {
+			clearInterval(timeer);
+			loading.style.opacity = 0
+			timeer = null;
+			total = 0;
+			fail = 0;
+			scheduleHandle && scheduleHandle.cancel();
+			scheduleHandle = null;
+			logExcel();
+			toastHTML('已停止任务');
+		
+		}
+		function StartMonitor() {
+			// 记录用户数据
+			window.localStorage.setItem('position', `${positions[0].value}-${positions[1].value}-${positions[2].value}-${positions[3].value}`);
+			window.localStorage.setItem('cycletime', `${cycle_num.value}`);
+			window.localStorage.setItem('deal_type', `${dealType.value}`);
+			// 创建当月文件夹，如果需要的话。
+			createdLogFolder();
+			img_result.src = '';
+			info_result.innerHTML = '';
+			count_info.innerHTML = countRecord();
+			loading.style.opacity = 1;
+			StartInterval();
+		}
+		function StartInterval() {
+			timeer = setInterval(() => {
+				total += 1;
+				img_result.src = '';
+				info_result.innerHTML = '';
+				calculator.innerHTML = '';
+				// 触发start并等待回调
+				ipcRenderer.invoke('start', {
+					position: [
+						Number(positions[0].value),
+						Number(positions[1].value),
+						Number(positions[2].value),
+						Number(positions[3].value),
+					],
+					dealType: dealType.value
+				}).then((result) => {
+					// ...
+					img_result.src = 'data:image/png;base64,' + result.img;
+					console.log(result);
+					if (result.result && result.result.words_result && result.result.words_result.length) {
+						info_result.innerHTML = resultHtml(result.result.words_result);
+						const dealdata = dealData(result.result.words_result);
+						log(JSON.stringify(result.result.words_result) + dealdata);
+					} else {
+						toastHTML('识别文字异常');
+						log('识别文字异常' + result);
+					}
+				}).catch((err) => {
+					fail += 1;
+					if (err.toString().indexOf('ERRTYPE_NETWORK') > 0) {
+						toastHTML('网络异常')
+						log(`网络异常${err.toString()}`);
+					} else {
+						calculator.innerHTML = ('异常：' + err.toString());
+						log(`其他异常${err.toString()}`);
+					}
+				}).finally(() => {
+					if (timeer) {
+						count_info.innerHTML = countRecord();
+					}
+					if (endtime.value !== '') {
+						const date = new Date()
+						const current = date.getHours() * 100 + date.getMinutes();
+						const end = Number(endtime.value.replace(':', ''));
+						if (current >= end) {
+							StopMonitor();
+							toastHTML('任务已结束');
+						}
+					}
+				})
+			}, Number(cycle_num.value) * 1000);
+		}
+		function PauseInterval() {
+			clearInterval(timeer);
+			timeer = null;
+		}
+		function testFun() {
+			if (timeer) {
+				toastHTML('监控正在进行中');
+				return
+			}
+			const start = starttime.value.replace(':', '');
+			const end = endtime.value.replace(':', '');
+			if (start === '' && end !== '' || start !== '' && end === '') {
+				toastHTML('开始/结束时间需要同时有或者没有');
+				return;
+			}
+			if (start !== '' && end !== '' && Number(end) - Number(start) < 0) {
+				toastHTML('结束时间需要大于开始时间');
+				return;
+			}
+			if (cycle_num.value === '' || Number(cycle_num.value) < 0) {
+				toastHTML('循环周期不能为空，也不能为负数');
+				return;
+			}
+			for (let i = 0; i < positions.length; i++) {
+				const value = positions[i].value;
+				if (value === '' || Number(value) < 0) {
+					toastHTML('截屏坐标不能为空, 也不能为负数');
+					return;
+				}
+			}
+			return true;
+		}
+
+		function resultHtml(arr) {
+			return arr.map((v) => {
+				return `<p class="info_result">${v.words}</p>`;
+			}).join('');
+		}
+
+		var toastTimer = null;
+		function toastHTML(msg) {
+			const toast_warp = document.getElementsByClassName('toast-warp')[0];
+			const toast = document.getElementsByClassName('toast')[0];
+			if (toastTimer) {
+				clearTimeout(toastTimer);
+			}
+
+			toast.innerHTML = msg;
+			toast_warp.style.display = '-webkit-box';
+			toastTimer = setTimeout(() => {
+				toast_warp.style.display = 'none';
+			}, 2000);
+		}
+
+		function countRecord() {
+			let rate = 1;
+			if (rate_num.value !== '' && !isNaN(Number(rate_num.value))) {
+				rate = Number(rate_num.value);
+			}
+			return `已执行${total}次，成功${total - fail}次, <span style="color: red">计算总和：${sum.toFixed(4)} / ${rate} = ${(sum / rate).toFixed(4)}</span>`
+		}
+
+		function initData() {
+			var storage_positions = window.localStorage.getItem('position');
+			var storage_cycle = window.localStorage.getItem('cycletime');
+			var storage_time = window.localStorage.getItem('starttime');
+			var deal_type = window.localStorage.getItem('deal_type');
+			if (storage_positions) {
+				const [one, two, three, four] = storage_positions.split('-');
+				positions[0].value = one;
+				positions[1].value = two;
+				positions[2].value = three;
+				positions[3].value = four;
+			}
+			if (storage_cycle) {
+				cycle_num.value = storage_cycle
+			}
+			if (storage_time) {
+				starttime.value = storage_time.split('-')[0];
+				endtime.value = storage_time.split('-')[1];
+			}
+			if (deal_type) {
+				dealType.value = deal_type;
+			}
+		}
+
+
+		function dealData(words) {
+			var data = [];
+			['目标功率', '并网功率', '理论总有功'].forEach((key, index) => {
+
+				for (let i in words) {
+					let word = words[i].words;
+					if (word.indexOf(key) > -1) {
+						const reg = word.match(/[0-9]+\.?[0-9]+/);
+						console.log(reg);
+						if (reg) {
+							data[index] = reg[0];
+						}
+					}
+				}
+			})
+			let result = null;
+			if (data.length === 3 && data.every((v) => Number(v) < 100 && !isNaN(Number(v)))) { // 合法数据
+				if (data[2] - data[0] >= 0) {
+					result = {
+						origin: `目标功率:${data[0]},并网功率:${data[1]},理论总有功:${data[2]}`,
+						msg: '满足条件',
+						result: data[2] - data[1]
+					}
+				} else {
+					console.log(data);
+					result = {
+						origin: `目标功率:${data[0]},并网功率:${data[1]},理论总有功:${data[2]}`,
+						msg: `不满足条件: 理论总有功(${data[2]}) - 目标功率(${data[0]}) = ${Number(data[2]) - Number(data[0])}`,
+						result: 0
+					}
+				}
+			} else if (data.length === 3 && data.every((v) => !isNaN(Number(v)))) {
+				result = {
+					origin: `目标功率:${data[0]},并网功率:${data[1]},理论总有功:${data[2]}`,
+					msg: `不满足条件: 识别到的数据超出限制：需要小于100`,
+					result: 0
+				}
+			}
+			if (result) {
+				calculator.innerHTML = `
+					<div>结果 ${result.msg}</div>
+					<div>数据 ${result.origin}</div>
+					<div>计算 ${result.result}</div>
+				`
+				sum += result.result;
+			} else {
+				calculator.innerHTML = `
+					<div>数据识别失败</div>
+				`
+			}
+			return result;
+		}
+
+		/** 返回父文件夹名，当前任务文件名*/
+		function createdLogFolder() {
+			const date = new Date();
+			const year = date.getFullYear();
+			const mouth = date.getMonth() + 1;
+			const day = date.getDate();
+
+			const hour = date.getHours();
+			const minute = date.getMinutes();
+			const second = date.getSeconds();
+
+			const filepath = path.resolve(__dirname, `log/${year}-${mouth}`);
+			if (!fs.existsSync(filepath)) {
+				fs.mkdirSync(filepath)
+			}
+			
+			currentMouthName = `${year}-${mouth}`;
+			currentLogName = `${mouth}-${day}_${hour}-${minute}-${second}.txt`;
+		}
+
+		function log(str) {
+			const date = new Date();
+			const year = date.getFullYear();
+			const mouth = date.getMonth() + 1;
+			const day = date.getDate();
+
+			const hour = date.getHours();
+			const minute = date.getMinutes();
+			const second = date.getSeconds();
+
+			const string = `${year}-${mouth}-${day} ${hour}:${minute}:${second} ${str}\n`;
+			
+			fs.appendFile(path.resolve(__dirname, `log/${currentMouthName}/${currentLogName}`),string,'utf8',function(err, ret) {
+        if(err) {
+            throw err
+        }
+        console.log('success')
+      })
+		}
+		function logExcel() {
+			const date = new Date();
+			const year = date.getFullYear();
+			const mouth = date.getMonth() + 1;
+			const day = date.getDate();
+
+			const hour = date.getHours();
+			const minute = date.getMinutes();
+			const second = date.getSeconds();
+
+			const logdate = `${year}-${mouth}-${day}`;
+			const logtime = `${starttime.value}-${endtime.value}`
+			const lognum = `${(sum / rate).toFixed(4)}`
+			let sheets = xlsx.parse(path.join(__dirname, 'logs.xlsx'));
+			sheets[0].data.push([logdate, logtime, lognum]);
+			const buffer = xlsx.build(sheets);
+			fs.writeFile(path.join(__dirname, 'logs.xlsx'), buffer, function (err) {
+				if (err) {
+					toastHTML("写入excel失败: " + err);
+					return;
+				}
+				console.log("写入完成");
+			});
+		}
+	</script>
+</body>
+
+</html>
