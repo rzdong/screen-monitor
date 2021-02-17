@@ -224,7 +224,7 @@
 	<input type="number" class="num-input rate-num" value="60" /><br />
 	
 	<span class="label" title="不填或乱填默认为1">识别类型：</span>
-	<select type="number" class="num-input deal-type" value="60">
+	<select type="number" class="num-input deal-type" value="1">
 		<option value="1">百度高精度识别</option>
 		<option value="2">百度普通识别</option>
 	</select>
@@ -366,7 +366,8 @@
 			timeer = null;
 			total = 0;
 			fail = 0;
-			logExcel();
+			logExcel(sum);
+			sum = 0;
 			toastHTML('已停止任务');
 			if (flag !== true) {
 				
@@ -433,8 +434,7 @@
 						const current = date.getHours() * 100 + date.getMinutes();
 						const end = Number(endtime.value.replace(':', ''));
 						if (current >= end) {
-							// StopMonitor(true);
-							StopMonitor();
+							StopMonitor(true);
 							toastHTML('任务已结束');
 						}
 					}
@@ -505,6 +505,8 @@
 
 		function initData() {
 			var storage_positions = window.localStorage.getItem('position');
+			
+			window.hasRecord = window.localStorage.getItem('position') ? 0 : 1;
 			var storage_cycle = window.localStorage.getItem('cycletime');
 			var storage_time = window.localStorage.getItem('starttime');
 			var deal_type = window.localStorage.getItem('deal_type');
@@ -620,7 +622,7 @@
         console.log('success')
       })
 		}
-		function logExcel() {
+		function logExcel(sum) {
 			const date = new Date();
 			const year = date.getFullYear();
 			const mouth = date.getMonth() + 1;
@@ -632,9 +634,9 @@
 
 			const logdate = `${year}-${mouth}-${day}`;
 			const logtime = `${starttime.value}-${endtime.value}`
-			const lognum = `${(sum / Number(rate_num.value)).toFixed(4)}`
+			const lognum = `${(sum / Number(rate_num.value)).toFixed(4)}`;
 			let sheets = xlsx.parse(path.join(__dirname, 'logs.xlsx'));
-			sheets[0].data.push([logdate, logtime, lognum]);
+			sheets[window.hasRecord].data.push([logdate, logtime, lognum]);
 			const buffer = xlsx.build(sheets);
 			fs.writeFile(path.join(__dirname, 'logs.xlsx'), buffer, function (err) {
 				if (err) {

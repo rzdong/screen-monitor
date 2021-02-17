@@ -74,14 +74,7 @@ options["probability"] = "true";
 
 const { ipcMain } = require('electron');
 let isSecond = false;
-ipcMain.on('start', (event, args) => {
-	console.log(args)
-	
-	// 开始分析
-});
-ipcMain.on('end', (event, args) => {
-  // 停止分析
-});
+
 app.requestSingleInstanceLock();
 app.on('second-instance', () => {
 	isSecond = true;
@@ -115,13 +108,17 @@ ipcMain.handle('start', async (event, args) => {
 })
 
 function startImage(resolve, reject, position, dealType) {
-	screenshot(`screenshot-${endfix}.png`, {}, function (error, complete) {
-		if (error) {
-			reject(error)
-			return;
-		}
-		rectImage(resolve, reject, position, dealType);
-	});
+	try {
+		screenshot(`screenshot-${endfix}.png`, {}, function (error, complete) {
+			// if (error) {
+			// 	reject(error)
+			// 	return;
+			// }
+			rectImage(resolve, reject, position, dealType);
+		});
+	} catch (error) {
+		reject(error);
+	}
 }
 
 function rectImage(resolve, reject, position, dealType) {
@@ -162,7 +159,11 @@ function resultImage(src, resolve, reject, dealType) { //generalBasic accurateBa
 	console.log(CurrentIndex)
 }
 
-
+function resultTest(src, resolve, reject, dealType) {
+	setTimeout(() => {
+		reject(JSON.stringify('测试'));
+	}, 3000)
+}
 
 app.on('ready', createWindow);
 
