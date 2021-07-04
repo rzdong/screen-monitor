@@ -3,7 +3,7 @@
 
 <head>
 	<meta charset="UTF-8">
-	<title>screen-monitor</title>
+	<title>智能限电管理系统</title>
 	<!-- https://electronjs.org/docs/tutorial/security#csp-meta-tag -->
 	<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
 	<style>
@@ -225,8 +225,7 @@
 	
 	<span class="label" title="不填或乱填默认为1">识别类型：</span>
 	<select type="number" class="num-input deal-type" value="1">
-		<option value="1">百度高精度识别</option>
-		<option value="2">百度普通识别</option>
+		<option value="1">离线识别</option>
 	</select>
 	<span class="label">打开日志文件：</span>
 	<button class="button el-button--primary open">打开</button><br />
@@ -414,7 +413,7 @@
 						log(JSON.stringify(result.result.words_result) + dealdata);
 					} else {
 						toastHTML('识别文字异常');
-						log('识别文字异常' + result);
+						log('识别文字异常' + JSON.stringify(result.result ? result.result : result));
 					}
 				}).catch((err) => {
 					fail += 1;
@@ -531,14 +530,36 @@
 
 
 		function dealData(words) {
-			var data = [];
-			['目标功率', '并网功率', '理论总有功'].forEach((key, index) => {
+			const keywords = ['目标功率', '并网功率', '理论总有功'];
+			for(let i = 0;i<words.length-1; i++) {
+				const word = words[i].words;
+				const wordnext = words[i+1].words;
+				console.log(word);
+				console.log(keywords.find(key => word.indexOf(key) > -1));
+				console.log(!word.match(/[0-9]+(\s+|.)[0-9]+/));
+				console.log(!keywords.find(key => wordnext.indexOf(key) > -1));
+				console.log(wordnext.match(/[0-9]+(\s+|.)[0-9]+/));
 
+				/**
+				 * 关键词，没有数字，下一行有数字
+				 */
+				if (
+					keywords.find(key => word.indexOf(key) > -1)
+					&& !word.match(/[0-9]+(\s+|.)[0-9]+/)
+					&& !keywords.find(key => wordnext.indexOf(key) > -1)
+					&& wordnext.match(/[0-9]+(\s+|.)[0-9]+/)
+				) {
+					words[i].words = word + wordnext;
+				}
+			}
+			var data = [];
+			keywords.forEach((key, index) => {
 				for (let i in words) {
 					let word = words[i].words;
 					if (word.indexOf(key) > -1) {
-						const reg = word.match(/[0-9]+\.?[0-9]+/);
-						console.log(reg);
+						// 补充上小数点
+						word.replace(/([0-9]+)(\s+)([0-9]+)/, (match, p1, p2, p3) => p1+'.'+p3);
+						const reg = word.match(/[0-9]+\.[0-9]+/);
 						if (reg) {
 							data[index] = reg[0];
 						}
