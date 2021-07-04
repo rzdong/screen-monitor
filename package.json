@@ -23,7 +23,6 @@
 	},
 	"dependencies": {
 		"axios": "^0.21.1",
-		"baidu-aip-sdk": "^2.4.6",
 		"desktop-screenshot": "^0.1.1",
 		"electron-packager": "^15.2.0",
 		"images": "^3.2.3",
