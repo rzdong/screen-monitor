@@ -225,7 +225,7 @@
 	
 	<span class="label" title="不填或乱填默认为1">识别类型：</span>
 	<select type="number" class="num-input deal-type" value="1">
-		<option value="1">离线识别</option>
+		<option value="1">在线识别</option>
 	</select>
 	<span class="label">打开日志文件：</span>
 	<button class="button el-button--primary open">打开</button><br />
@@ -475,7 +475,7 @@
 
 		function resultHtml(arr) {
 			return arr.map((v) => {
-				return `<p class="info_result">${v.words}</p>`;
+				return `<p class="info_result">${v.words.replace(/([0-9]+)(\s+)([0-9]+)/, (match, p1, p2, p3) => p1+'.'+p3)}</p>`;
 			}).join('');
 		}
 
@@ -558,7 +558,7 @@
 					let word = words[i].words;
 					if (word.indexOf(key) > -1) {
 						// 补充上小数点
-						word.replace(/([0-9]+)(\s+)([0-9]+)/, (match, p1, p2, p3) => p1+'.'+p3);
+						word = word.replace(/([0-9]+)(\s+)([0-9]+)/, (match, p1, p2, p3) => p1+'.'+p3);
 						const reg = word.match(/[0-9]+\.[0-9]+/);
 						if (reg) {
 							data[index] = reg[0];

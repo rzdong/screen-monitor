@@ -18,7 +18,7 @@ function createWindow() {
 	win.loadFile('index.html');
 
 	// Open the DevTools.
-	win.webContents.openDevTools();
+	// win.webContents.openDevTools();
 
 	win.on('closed', () => {
 		win = null;
@@ -27,7 +27,7 @@ function createWindow() {
 
 var screenshot = require('desktop-screenshot');
 var FormData = require('form-data');
-
+const request = require('request');
 var fs = require('fs');
 var images = require("images");
 var axios = require('axios');
@@ -80,44 +80,39 @@ function startImage(resolve, reject, position, dealType) {
 function rectImage(resolve, reject, position, dealType) {
 	images(images(`screenshot-${endfix}.png`), position[0], position[1], position[2], position[3])
 		.save(`result-${endfix}.png`);
-	const url = 'http://localhost:8089/api/tr-run/';
-	let data = fs.createReadStream(__dirname + `/result-${endfix}.png`);
-	let form = new FormData();
-	form.append('file', data);
+	const url = 'http://159.75.201.229:8089/api/tr-run/';
+	// let form = new FormData();
+	// let data = fs.readFileSync(`result-${endfix}.png`);
+	// form.append('file', data);
 
-	let getHeaders = (form => {
-		return new Promise((reso, reject) => {
-			form.getLength((err, length) => {
-				if (err) reject(err);
-				let headers = Object.assign({ 'Content-Length': length }, form.getHeaders());
-				reso(headers);
-			});
-		});
-	});
-	getHeaders(form)
-		.then(headers => {
-			return axios.post(url, form, { headers: headers });
-		})
-		.then((response) => {
-			try {
-				if (response.data.data && response.data.data.raw_out) {
-					let words_result = response.data.data.raw_out;
-					words_result = words_result.map(v => ({words: v[1]}));
-					console.log(response.data.data.raw_out)
-					resolve({
-						img: images(`result-${endfix}.png`).encode('png').toString('base64'),
-						result: {
-							words_result,
-						},
-					});
-				} else {
-					reject('没有识别到正常数据'+ JSON.stringify(response.data));
-				}
-			} catch (error) {
-				console.log(JSON.stringify(error))
+	let data = fs.createReadStream(`result-${endfix}.png`);
+	let form = {
+		file: data,
+	}
+	request.post({url:url,formData:form},(err,res,body)=>{
+		if(err) {
+			reject('posterror'+ JSON.stringify(err));
+			return;
+		};
+		try {
+			const response = JSON.parse(body);
+			if (response.data && response.data.raw_out) {
+				let words_result = response.data.raw_out;
+				words_result = words_result.map(v => ({words: v[1]}));
+				console.log(response.data.raw_out)
+				resolve({
+					img: images(`result-${endfix}.png`).encode('png').toString('base64'),
+					result: {
+						words_result,
+					},
+				});
+			} else {
+				reject('没有识别到正常数据'+ JSON.stringify(response));
 			}
-		})
-		.catch(e => { reject(JSON.stringify(e)) });
+		} catch (error) {
+			reject('trycatch' + JSON.stringify(error))
+		}
+	})
 }
 
 
