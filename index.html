@@ -589,7 +589,7 @@
 					result: 0
 				}
 			}
-			if (result) {
+			if (result && !isNaN(Number(result.result))) {
 				calculator.innerHTML = `
 					<div>结果 ${result.msg}</div>
 					<div>数据 ${result.origin}</div>
