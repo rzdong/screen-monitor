@@ -405,7 +405,7 @@
 					dealType: dealType.value
 				}).then((result) => {
 					// ...
-					img_result.src = 'data:image/png;base64,' + result.img;
+					img_result.src = result.img;
 					console.log(result);
 					if (result.result && result.result.words_result && result.result.words_result.length) {
 						info_result.innerHTML = resultHtml(result.result.words_result);

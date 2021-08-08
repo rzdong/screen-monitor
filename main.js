@@ -26,11 +26,9 @@ function createWindow() {
 }
 
 var screenshot = require('desktop-screenshot');
-var FormData = require('form-data');
 const request = require('request');
 var fs = require('fs');
-var images = require("images");
-var axios = require('axios');
+var Jimp = require('jimp');
 
 const { ipcMain } = require('electron');
 let isSecond = false;
@@ -51,11 +49,14 @@ ipcMain.handle('test', async (event, args) => {
 
 				reject(error);
 			}
-			var images = require("images");
-			var buffer = images(images("screenshot-test.png"), position[0], position[1], position[2], position[3])
-				.encode('png');
-
-			resolve(buffer.toString('base64'));
+			Jimp.read("screenshot-test.png").then(image => {
+				image
+				.crop(position[0], position[1], position[2], position[3])
+				.getBuffer(Jimp.MIME_PNG, (error, buffer) => {
+					console.log(buffer);
+					resolve(buffer.toString('base64'));
+				})
+			})
 		});
 	});
 
@@ -78,40 +79,46 @@ function startImage(resolve, reject, position, dealType) {
 }
 
 function rectImage(resolve, reject, position, dealType) {
-	images(images(`screenshot-${endfix}.png`), position[0], position[1], position[2], position[3])
-		.save(`result-${endfix}.png`);
-	const url = 'http://159.75.201.229:8089/api/tr-run/';
-	// let form = new FormData();
-	// let data = fs.readFileSync(`result-${endfix}.png`);
-	// form.append('file', data);
-
-	let data = fs.createReadStream(`result-${endfix}.png`);
-	let form = {
-		file: data,
-	}
-	request.post({url:url,formData:form},(err,res,body)=>{
-		if(err) {
-			reject('posterror'+ JSON.stringify(err));
-			return;
-		};
-		try {
-			const response = JSON.parse(body);
-			if (response.data && response.data.raw_out) {
-				let words_result = response.data.raw_out;
-				words_result = words_result.map(v => ({words: v[1]}));
-				console.log(response.data.raw_out)
-				resolve({
-					img: images(`result-${endfix}.png`).encode('png').toString('base64'),
-					result: {
-						words_result,
-					},
-				});
-			} else {
-				reject('没有识别到正常数据'+ JSON.stringify(response));
-			}
-		} catch (error) {
-			reject('trycatch' + JSON.stringify(error))
-		}
+	Jimp.read(`screenshot-${endfix}.png`).then(image => {
+		image
+			.crop(position[0], position[1], position[2], position[3])
+			.write(`result-${endfix}.png`, (err, image) => {
+				if (err) {
+					reject('图片写入出错');
+				} else {
+					const url = 'http://159.75.201.229:8089/api/tr-run/';
+					let data = fs.createReadStream(`result-${endfix}.png`);
+					let form = {
+						file: data,
+					}
+					request.post({url:url,formData:form},(err,res,body)=>{
+						if(err) {
+							reject('posterror'+ JSON.stringify(err));
+							return;
+						};
+						try {
+							const response = JSON.parse(body);
+							if (response.data && response.data.raw_out) {
+								let words_result = response.data.raw_out;
+								words_result = words_result.map(v => ({words: v[1]}));
+								console.log(response.data.raw_out)
+								resolve({
+									img: response.data.img_detected,
+									result: {
+										words_result,
+									},
+								});
+							} else {
+								reject('没有识别到正常数据'+ JSON.stringify(response));
+							}
+						} catch (error) {
+							reject('trycatch' + JSON.stringify(error))
+						}
+					})
+				}
+			})
+	}).catch ((error) => {
+		reject('读取图片出错');
 	})
 }
 
